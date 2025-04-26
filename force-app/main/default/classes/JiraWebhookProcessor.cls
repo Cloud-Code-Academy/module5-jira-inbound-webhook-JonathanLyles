@@ -40,16 +40,15 @@ public without sharing class JiraWebhookProcessor implements IWebhookProcessor {
      */
     public Boolean validate(RestRequest request) {
         try {
-            // TODO: Implement validation logic
-            // Example:
-            // String requestBody = request.requestBody.toString();
-            // Map<String, Object> payload = (Map<String, Object>) JSON.deserializeUntyped(requestBody);
-            // if (!payload.containsKey('webhookEvent')) {
-            //     return false;
-            // }
-            // return true;
+            String requestBody = request.requestBody.toString();
+            Map<String, Object> payload = (Map<String, Object>) JSON.deserializeUntyped(requestBody);
             
-            return false; // Replace with your implementation
+            if (!payload.containsKey('webhookEvent')) {
+                return false;
+            }
+
+            return true;      
+
         } catch (Exception e) {
             // Log the error and return false
             System.debug(LoggingLevel.ERROR, 'Error validating webhook: ' + e.getMessage());
@@ -75,21 +74,28 @@ public without sharing class JiraWebhookProcessor implements IWebhookProcessor {
      */
     public void process(RestRequest request) {
         try {
-            // TODO: Implement webhook processing logic
-            // Example:
-            // String requestBody = request.requestBody.toString();
-            // Map<String, Object> payload = (Map<String, Object>) JSON.deserializeUntyped(requestBody);
-            // String webhookEvent = (String) payload.get('webhookEvent');
-            // 
-            // if (webhookEvent == EVENT_ISSUE_CREATED) {
-            //     processIssueCreated(payload);
-            // } else if (webhookEvent == EVENT_ISSUE_UPDATED) {
-            //     processIssueUpdated(payload);
-            // } // ... and so on for other event types
-            
+            String requestBody = request.requestBody.toString();
+            Map<String, Object> payload = (Map<String, Object>) JSON.deserializeUntyped(requestBody);
+            String webhookEvent = (String) payload.get('webhookEvent');
+            if (webhookEvent == EVENT_ISSUE_CREATED) {
+                processIssueCreated(payload);
+            } else if (webhookEvent == EVENT_ISSUE_UPDATED) {
+                processIssueUpdated(payload);
+            } else if (webhookEvent == EVENT_ISSUE_DELETED) {
+                processIssueDeleted(payload);
+            } else if (webhookEvent == EVENT_PROJECT_CREATED) {
+                processProjectCreated(payload);
+            } else if (webhookEvent == EVENT_PROJECT_UPDATED) {
+                processProjectUpdated(payload);
+            } else if (webhookEvent == EVENT_PROJECT_DELETED) {
+                processProjectDeleted(payload);
+            } else {
+                System.debug(LoggingLevel.ERROR, 'Unknown webhook event: ' + webhookEvent);
+            }            
         } catch (Exception e) {
             System.debug(LoggingLevel.ERROR, 'Error processing webhook: ' + e.getMessage());
             throw e; // Re-throw to let the caller handle it
+            //TODO: Re-throw
         }
     }
     

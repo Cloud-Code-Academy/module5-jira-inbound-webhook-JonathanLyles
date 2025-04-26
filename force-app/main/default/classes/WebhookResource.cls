@@ -26,8 +26,44 @@ global without sharing class WebhookResource {
      */
     @HttpPost
     global static ResponseWrapper doPost() {
-        // TODO: Implement webhook processing logic
-        return new ResponseWrapper('error', 'Method not implemented');
+        
+        String webhookType;
+
+        RestRequest req = RestContext.request;
+        RestResponse res = RestContext.response;
+        
+        if (req == null) {
+            return new ResponseWrapper('error', 'No request found');
+        }
+        
+        if (req.requestBody == null) {
+            return new ResponseWrapper('error', 'No request body found');
+        }
+        
+        if (req.requestURI == null) {
+            return new ResponseWrapper('error', 'No request URI found');
+        }   
+
+        try {
+        // Extract the webhook type from the URL path using getWebhookTypeFromPath
+            webhookType = getWebhookTypeFromPath(req.requestURI);
+        // Check if the webhook type is empty   
+            if (String.isEmpty(webhookType)) {
+                return new ResponseWrapper('error', 'No webhook type found');
+            }
+        // Check if the webhook type is suported
+            if (!isSupportedWebhook(webhookType)) {
+                return new ResponseWrapper('error', 'Unsupported webhook type');
+            }
+        } 
+        catch (Exception e) {
+            //TODO: Add logging
+            return new ResponseWrapper('error', 'Error processing webhook: ' + e.getMessage());
+        }
+        
+        WebhookFactory.processWebhook(webhookType, req);
+
+        return new ResponseWrapper('success', webhookType + 'Webhook received successfully');
     }
     
     /**
@@ -37,12 +73,7 @@ global without sharing class WebhookResource {
      */
     private static String getWebhookTypeFromPath(String path) {
         System.debug('getWebhookTypeFromPath: ' + path);
-        // Expected formats: /webhook/jira or /services/apexrest/webhook/jira
-        if (path == null) {
-            return '';
-        }
         
-        // Look for the webhook segment in the path
         Integer webhookIndex = path.indexOf('/webhook/');
         
         if (webhookIndex >= 0) {
@@ -61,6 +92,20 @@ global without sharing class WebhookResource {
         }
         
         return '';
+    }
+
+    /**
+     * @description Checks if the webhook type is supported
+     * @param webhookType The webhook type
+     * @return True if the webhook type is supported, false otherwise
+     */
+    private static Boolean isSupportedWebhook(String webhookType) {
+        List<Webhook_Type__mdt> webhookTypes = [SELECT Type_Name__c FROM Webhook_Type__mdt];
+        List<String> webhookTypeList = new List<String>();
+        for(Webhook_Type__mdt wt : webhookTypes) {
+            webhookTypeList.add(wt.Type_Name__c);
+        }
+        return webhookTypeList.contains(webhookType);
     }
     
     /**

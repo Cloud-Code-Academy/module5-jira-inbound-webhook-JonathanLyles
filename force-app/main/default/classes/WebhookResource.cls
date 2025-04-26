@@ -61,6 +61,19 @@ global without sharing class WebhookResource {
             return new ResponseWrapper('error', 'Error processing webhook: ' + e.getMessage());
         }
         
+        // Check if the payload is valid
+
+        try{
+            JiraWebhookProcessor jwp = new JiraWebhookProcessor();
+            if( jwp.validate(req) == false){
+                return new ResponseWrapper('error', 'Invalid JSON payload');
+            }
+        }catch(Exception e){
+            //TODO: something bad happened, so log it. 
+            return new ResponseWrapper('error', 'Invalid JSON payload');
+        }
+
+
         WebhookFactory.processWebhook(webhookType, req);
 
         return new ResponseWrapper('success', webhookType + 'Webhook received successfully');

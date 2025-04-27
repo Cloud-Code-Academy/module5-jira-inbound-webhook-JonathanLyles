@@ -159,7 +159,30 @@ public without sharing class JiraWebhookProcessor implements IWebhookProcessor {
      * Implement logic to create a Jira_Project__c record
      */
     private void processProjectCreated(Map<String, Object> payload) {
-        // TODO: Implement project creation logic
+                 
+        Jira_Project__c newProject = new Jira_Project__c();    
+        //TODO: add null checks
+        if(payload != null){
+            Map<String, Object> projectMap = (Map<String, Object>) payload.get('project');
+
+            newProject.Project_Name__c = (String) projectMap.get('name');
+
+           // Datetime dt = Datetime.newInstance( Long.valueOf( (String) payload.get('timestamp') ));
+            newProject.Created_Date__c = Datetime.now();
+
+            newProject.Project_Id__c = (String) projectMap.get('id');
+
+            newProject.Project_Key__c = (String) projectMap.get('key');
+
+            newProject.Description__c = (String) projectMap.get('description');
+
+            insert newProject;
+
+        }
+
+
+
+            
     }
     
     /**

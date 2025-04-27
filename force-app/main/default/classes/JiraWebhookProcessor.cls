@@ -115,7 +115,7 @@ public without sharing class JiraWebhookProcessor implements IWebhookProcessor {
             
             // 2. Create a new Jira_Issue__c record using the helper method
             Jira_Issue__c newIssue = createIssueRecord(issueData);
-            
+        
             // 3. Insert the new record
             insert newIssue;
             
@@ -221,6 +221,23 @@ public without sharing class JiraWebhookProcessor implements IWebhookProcessor {
      * 2. Map the fields to a new Jira_Issue__c record
      */
     private Jira_Issue__c createIssueRecord(Map<String, Object> issueData) {
+
+        Map<String,Object> fieldsMap = (Map<String, Object>) issueData.get('fields');
+        Map<String,Object> issueTypeMap = (Map<String, Object>) fieldsMap.get('issuetype');
+        Map<String,Object> projectMap = (Map<String, Object>) fieldsMap.get('project');
+        Map<String,Object> statusMap = (Map<String, Object>) fieldsMap.get('status');
+        //There should be null checking in this code
+        Jira_Issue__c newIssueRecord = new Jira_Issue__c();
+        newIssueRecord.description__c = (String) fieldsMap.get('description');
+        newIssueRecord.Issue_Key__c = (String) issueData.get('key');
+        newIssueRecord.Issue_Type__c = (String) issueTypeMap.get('name');
+        newIssueRecord.Last_Updated__c = Datetime.now();
+        newIssueRecord.Project_Key__c = (String) projectMap.get('key');
+        newIssueRecord.Status__c = (String) statusMap.get('name');
+        newIssueRecord.Summary__c = (String) fieldsMap.get('summary');
+
+
+        return newIssueRecord;
         // TODO: Implement issue record creation logic
         // Example (incomplete - add other fields as needed):
         // String issueKey = (String) issueData.get('key');
@@ -235,7 +252,7 @@ public without sharing class JiraWebhookProcessor implements IWebhookProcessor {
         // 
         // return issue;
         
-        return new Jira_Issue__c();
+        
     }
     
     /**

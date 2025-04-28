@@ -158,6 +158,7 @@ public without sharing class JiraWebhookProcessor implements IWebhookProcessor {
         // TODO: Implement issue deletion logic
         Map<String, Object> issueMap = (Map<String, Object>) payload.get('issue');
         String doomedIssueKey = (String) issueMap.get('key');
+        //TODO: fix line 162
         Jira_Issue__c doomedIssue = [SELECT Id FROM Jira_Issue__c WHERE Issue_Key__c = :doomedIssueKey];
         try{
             delete doomedIssue;
@@ -174,7 +175,7 @@ public without sharing class JiraWebhookProcessor implements IWebhookProcessor {
      * Implement logic to create a Jira_Project__c record
      */
     private void processProjectCreated(Map<String, Object> payload) {
-                 
+            //TODO: some of this logic belongs below in createProjectRecord()     
         Jira_Project__c newProject = new Jira_Project__c();    
         //TODO: add null checks
         if(payload != null){
@@ -182,7 +183,6 @@ public without sharing class JiraWebhookProcessor implements IWebhookProcessor {
 
             newProject.Project_Name__c = (String) projectMap.get('name');
 
-           // Datetime dt = Datetime.newInstance( Long.valueOf( (String) payload.get('timestamp') ));
             newProject.Created_Date__c = Datetime.now();
 
             newProject.Project_Id__c = (String) projectMap.get('id');
@@ -209,8 +209,22 @@ public without sharing class JiraWebhookProcessor implements IWebhookProcessor {
      * If the record doesn't exist, create it
      */
     private void processProjectUpdated(Map<String, Object> payload) {
-        // TODO: Implement project update logic
-     
+        //TODO: some of the logic belongs in updateProjectRecord()
+        if(payload != null){
+            Map<String, Object> projectMap = (Map<String, Object>) payload.get('project');
+            String projectKey = (String) projectMap.get('key');
+            Jira_Project__c existingProject = [SELECT Id, Project_Name__c, Project_Id__c, Project_Key__c, Description__c FROM Jira_Project__c WHERE Project_Key__c = :projectKey LIMIT 1];
+            Jira_Project__c updatedProject = new Jira_Project__c();    
+
+            updatedProject.Id = existingProject.Id;
+            updatedProject.Project_Name__c = (String) projectMap.get('name');
+            updatedProject.Project_Id__c = (String) projectMap.get('id');
+            updatedProject.Project_Key__c = (String) projectMap.get('key');
+            updatedProject.Description__c = (String) projectMap.get('description');            
+            
+            update updatedProject;
+
+        }
     }
     
     /**
@@ -221,7 +235,14 @@ public without sharing class JiraWebhookProcessor implements IWebhookProcessor {
      * Implement logic to delete a Jira_Project__c record
      */
     private void processProjectDeleted(Map<String, Object> payload) {
-        // TODO: Implement project deletion logic
+        Map<String, Object> projectMap = (Map<String, Object>) payload.get('project');
+        String projectKey = (String) projectMap.get('key');
+        Jira_Project__c doomedProject = [SELECT Id FROM Jira_Project__c WHERE Project_Key__c = :projectKey];
+        try{
+            delete doomedProject;
+        }catch(DmlException e){
+            //TODO: add logging
+        }
     }
     
     /**

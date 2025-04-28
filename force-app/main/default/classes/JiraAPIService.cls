@@ -1,5 +1,6 @@
 /**
  * Service class for making callouts to the Jira API
+ * @author Jonathan Lyles
  */
 public with sharing class JiraAPIService {
 
@@ -55,13 +56,11 @@ public with sharing class JiraAPIService {
 		req.setEndpoint(NAMED_CREDENTIAL + CREATE_PROJECT_URL);
 		req.setHeader('Content-Type','application/json');
 		Map<String, Object> body = issueWrapper.generateIssuePayloadMap();
-		System.debug('Issue body: ' + body);
 		req.setBody(JSON.serialize(body));
 		HttpResponse res = http.send(req);
 		if(res.getStatusCode() == 201){
 			Map<String, Object> responseBody = (Map<String, Object>) JSON.deserializeUntyped(res.getBody());
 			String issueKey = (String) responseBody.get('key');
-			system.debug('hello issueKey: ' + issueKey);
 			return issueKey;
 		}else{
 			return null;

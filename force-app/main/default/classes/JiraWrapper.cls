@@ -1,5 +1,6 @@
 /**
  * Wrapper classes for Jira entities (Project and Issue)
+ * @author Jonathan Lyles
  */
 public class JiraWrapper {
 	private static final String LEAD_ACCOUNT_ID = '712020:3863faf7-35b9-466a-a958-b67d229b0dff';

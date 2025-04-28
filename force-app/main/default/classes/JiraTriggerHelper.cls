@@ -1,5 +1,6 @@
 /**
  * Helper class for Jira triggers
+ * @author Jonathan Lyles
  */
 public with sharing class JiraTriggerHelper {
 	/**
@@ -19,6 +20,7 @@ public with sharing class JiraTriggerHelper {
 					project.Description__c
 				));
 			}
+			//Todo: add logging
 			System.debug('added');
 		}
 	
@@ -41,7 +43,6 @@ public with sharing class JiraTriggerHelper {
 	 * Process Jira_Issue__c records after insert
 	 * @param newIssues List of newly inserted Jira_Issue__c records
 	 *
-	 * TODO: Implement this method to process new Jira issues
 	 * The method should:
 	 * 1. Filter out issues that already have a Jira issue key
 	 * 2. Ensure the Project_Key__c field is not blank

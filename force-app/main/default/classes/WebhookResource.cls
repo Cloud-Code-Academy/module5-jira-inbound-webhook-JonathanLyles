@@ -2,12 +2,9 @@
  * @description REST resource to handle incoming webhooks from various systems
  * Current implementation supports Jira webhooks at /webhook/jira
  * 
- * STUDENT TASK:
- * Complete the doPost method implementation to process incoming webhooks
- * 
  * IMPORTANT NOTE: without sharing is used to avoid sharing issues with the Jira_Issue__c and Jira_Project__c objects but it is not a good practice
  * 
- * @author Student Name
+ * @author Jonathan
  */
 @RestResource(urlMapping='/webhook/*')
 global without sharing class WebhookResource {
@@ -73,7 +70,7 @@ global without sharing class WebhookResource {
             return new ResponseWrapper('error', 'Invalid JSON payload');
         }
 
-        
+
         WebhookFactory.processWebhook(webhookType, req);
 
         return new ResponseWrapper('success', webhookType + 'Webhook received successfully');

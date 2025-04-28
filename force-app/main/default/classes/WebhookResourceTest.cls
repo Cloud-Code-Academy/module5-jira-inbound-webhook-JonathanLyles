@@ -1,6 +1,6 @@
 /**
  * @description Test class for WebhookResource
- * @author Your Name
+ * @author Jonathan Lyles
  */
 @IsTest
 private class WebhookResourceTest {

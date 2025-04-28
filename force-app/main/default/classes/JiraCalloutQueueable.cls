@@ -1,5 +1,6 @@
 /**
  * Queueable class to make asynchronous callouts to Jira API
+ * @author Jonathan Lyles
  */
 public class JiraCalloutQueueable implements Queueable, Database.AllowsCallouts {
 	// Simple constants instead of enum
@@ -71,18 +72,16 @@ public class JiraCalloutQueueable implements Queueable, Database.AllowsCallouts 
 					updateJiraProject(jiraProjectId);
 				}else{
 					System.debug('project not created');
+					//TODO: add logging
 				}
 		}else if(issueWrapper != null && calloutType == 'ISSUE'){
 				//create issue and get the key
-				System.debug('updating the issue');
 				String jiraIssueKey = JiraAPIService.createIssue(issueWrapper);
-				System.debug('Jira Issue Key: ' + jiraIssueKey);
 				//update the salesforce record		
 				if(jiraIssueKey != null){
-					System.debug('calling updateJiraIssue');
 					updateJiraIssue(jiraIssueKey);
 				}else{
-					
+					//TODO: Add logging
 				}
 			}
 	}
@@ -96,7 +95,6 @@ public class JiraCalloutQueueable implements Queueable, Database.AllowsCallouts 
 		Jira_Project__c project = new Jira_Project__c();
 		project.Id = this.recordId;
 		project.Project_ID__c = jiraProjectId;
-		System.debug(project.Project_ID__c);
 		update project;
 	}
 

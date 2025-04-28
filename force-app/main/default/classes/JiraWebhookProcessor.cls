@@ -156,6 +156,14 @@ public without sharing class JiraWebhookProcessor implements IWebhookProcessor {
      */
     private void processIssueDeleted(Map<String, Object> payload) {
         // TODO: Implement issue deletion logic
+        Map<String, Object> issueMap = (Map<String, Object>) payload.get('issue');
+        String doomedIssueKey = (String) issueMap.get('key');
+        Jira_Issue__c doomedIssue = [SELECT Id FROM Jira_Issue__c WHERE Issue_Key__c = :doomedIssueKey];
+        try{
+            delete doomedIssue;
+        }catch(DmlException e){
+            //TODO: write to log
+        }
     }
     
     /**

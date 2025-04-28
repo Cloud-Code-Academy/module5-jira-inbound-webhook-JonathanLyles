@@ -73,7 +73,7 @@ global without sharing class WebhookResource {
             return new ResponseWrapper('error', 'Invalid JSON payload');
         }
 
-
+        
         WebhookFactory.processWebhook(webhookType, req);
 
         return new ResponseWrapper('success', webhookType + 'Webhook received successfully');

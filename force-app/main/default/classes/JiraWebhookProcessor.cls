@@ -137,7 +137,14 @@ public without sharing class JiraWebhookProcessor implements IWebhookProcessor {
      * If the record doesn't exist, create it
      */
     private void processIssueUpdated(Map<String, Object> payload) {
-        // TODO: Implement issue update logic
+        
+        //Get the Salesforce Jira_Issue__c record from the issue key in the payload
+        Map<String, Object> issueMap = (Map<String, Object>) payload.get('issue');
+        String issueKey = (String) issueMap.get('key');
+        //TODO: add null check
+        Jira_Issue__c existingIssue = [SELECT Id, Description__c, Issue_Key__c, Issue_Type__c, Last_Updated__c, Project_Key__c, Status__c, Summary__c FROM Jira_Issue__c WHERE Issue_Key__c = :issueKey LIMIT 1];
+        Jira_Issue__c updatedIssue = updateIssueRecord(existingIssue, payload);
+        update updatedIssue;       
     }
     
     /**
@@ -195,6 +202,7 @@ public without sharing class JiraWebhookProcessor implements IWebhookProcessor {
      */
     private void processProjectUpdated(Map<String, Object> payload) {
         // TODO: Implement project update logic
+     
     }
     
     /**
@@ -226,7 +234,7 @@ public without sharing class JiraWebhookProcessor implements IWebhookProcessor {
         Map<String,Object> issueTypeMap = (Map<String, Object>) fieldsMap.get('issuetype');
         Map<String,Object> projectMap = (Map<String, Object>) fieldsMap.get('project');
         Map<String,Object> statusMap = (Map<String, Object>) fieldsMap.get('status');
-        //There should be null checking in this code
+        //TODO: There should be null checking in this code
         Jira_Issue__c newIssueRecord = new Jira_Issue__c();
         newIssueRecord.description__c = (String) fieldsMap.get('description');
         newIssueRecord.Issue_Key__c = (String) issueData.get('key');
@@ -236,23 +244,7 @@ public without sharing class JiraWebhookProcessor implements IWebhookProcessor {
         newIssueRecord.Status__c = (String) statusMap.get('name');
         newIssueRecord.Summary__c = (String) fieldsMap.get('summary');
 
-
         return newIssueRecord;
-        // TODO: Implement issue record creation logic
-        // Example (incomplete - add other fields as needed):
-        // String issueKey = (String) issueData.get('key');
-        // Map<String, Object> fields = (Map<String, Object>) issueData.get('fields');
-        // String summary = (String) fields.get('summary');
-        // 
-        // Jira_Issue__c issue = new Jira_Issue__c(
-        //     Issue_Key__c = issueKey,
-        //     Summary__c = summary
-        //     // Add other fields as needed
-        // );
-        // 
-        // return issue;
-        
-        
     }
     
     /**
@@ -265,8 +257,28 @@ public without sharing class JiraWebhookProcessor implements IWebhookProcessor {
      * Implement logic to extract issue fields and update a record
      */
     private Jira_Issue__c updateIssueRecord(Jira_Issue__c existingIssue, Map<String, Object> issueData) {
+        
         // TODO: Implement issue record update logic
-        return existingIssue;
+        // TODO: Create a new method to create the issue maps? Because this part is repeating
+        Map<String,Object> issueMap = (Map<String, Object>) issueData.get('issue');
+        Map<String,Object> fieldsMap = (Map<String, Object>) issueMap.get('fields');
+        Map<String,Object> issueTypeMap = (Map<String, Object>) fieldsMap.get('issuetype');
+        Map<String,Object> projectMap = (Map<String, Object>) fieldsMap.get('project');
+        Map<String,Object> statusMap = (Map<String, Object>) fieldsMap.get('status');
+        //TODO: There should be null checking in this code
+        Jira_Issue__c updatedIssueRecord = new Jira_Issue__c();
+        updatedIssueRecord.Id = existingIssue.Id;
+        System.debug(updatedIssueRecord);
+        System.debug('updatedIssueRecord: ' + updatedIssueRecord);
+        updatedIssueRecord.description__c = (String) fieldsMap.get('description');
+        updatedIssueRecord.Issue_Key__c = (String) issueMap.get('key');
+        updatedIssueRecord.Issue_Type__c = (String) issueTypeMap.get('name');
+        updatedIssueRecord.Last_Updated__c = Datetime.now();
+        updatedIssueRecord.Project_Key__c = (String) projectMap.get('key');
+        updatedIssueRecord.Status__c = (String) statusMap.get('name');
+        updatedIssueRecord.Summary__c = (String) fieldsMap.get('summary');
+
+        return updatedIssueRecord;
     }
     
     /**

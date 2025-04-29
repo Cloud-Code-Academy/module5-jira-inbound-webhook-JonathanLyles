@@ -39,10 +39,17 @@ public without sharing class JiraWebhookProcessor implements IWebhookProcessor {
      * 4. Example: if (!payload.containsKey('webhookEvent')) { return false; }
      */
     public Boolean validate(RestRequest request) {
+
+        // Guard clause: Ensure request or requestBody is not null
+        if (request == null || request.requestBody == null) {
+            return false;
+        }
+        
         try {
             String requestBody = request.requestBody.toString();
             Map<String, Object> payload = (Map<String, Object>) JSON.deserializeUntyped(requestBody);
             
+            // Guard clause: Ensure webhookEvent is not null
             if (!payload.containsKey('webhookEvent')) {
                 return false;
             }
@@ -73,10 +80,20 @@ public without sharing class JiraWebhookProcessor implements IWebhookProcessor {
      * 4. Example: if (webhookEvent == EVENT_ISSUE_CREATED) { processIssueCreated(payload); }
      */
     public void process(RestRequest request) {
+        // Guard clause to ensure the request or requestBody is not null
+        if(request == null || request.requestBody == null){
+            throw new JiraWebhookProcessorException('Error: request or requestBody is null');
+        }
         try {
             String requestBody = request.requestBody.toString();
             Map<String, Object> payload = (Map<String, Object>) JSON.deserializeUntyped(requestBody);
+            
+            // Guard clause: check if webhookEvent exists or is null
             String webhookEvent = (String) payload.get('webhookEvent');
+            if (String.isEmpty(webhookEvent)) {
+                throw new JiraWebhookProcessorException('Error: webhookEvent is missing or empty.');
+            }
+
             if (webhookEvent == EVENT_ISSUE_CREATED) {
                 processIssueCreated(payload);
             } else if (webhookEvent == EVENT_ISSUE_UPDATED) {
@@ -107,9 +124,12 @@ public without sharing class JiraWebhookProcessor implements IWebhookProcessor {
      * Use this example as a template for other event handlers
      */
     private void processIssueCreated(Map<String, Object> payload) {
+
+        // Guard clause: ensure payload or issue are not empty
+        if( payload == null || payload.get('issue') == null){
+            throw new JiraWebhookProcessorException('Error: payload or payload.issue is null');
+        }
         try {
-            // Example implementation:
-            
             // 1. Extract issue data from the payload
             Map<String, Object> issueData = (Map<String, Object>) payload.get('issue');
             
@@ -138,10 +158,27 @@ public without sharing class JiraWebhookProcessor implements IWebhookProcessor {
      */
     private void processIssueUpdated(Map<String, Object> payload) {
         
+        // Guard clause: ensure payload or issue are not empty
+        if( payload == null || payload.get('issue') == null){
+        throw new JiraWebhookProcessorException('Error: payload or payload.issue is null');
+        }
+
+
         //Get the Salesforce Jira_Issue__c record from the issue key in the payload
         Map<String, Object> issueMap = (Map<String, Object>) payload.get('issue');
+
+        // Guard clause: ensure issueMap is not null or empty
+        if (issueMap == null) {
+            throw new JiraWebhookProcessorException('Error: issue data is missing in the payload.');
+        }
+
         String issueKey = (String) issueMap.get('key');
-        //TODO: add null check
+
+        //Guard clause: ensure issueKey is not null or empty
+        if (String.isEmpty(issueKey)) {
+            throw new JiraWebhookProcessorException('Error: issue key is missing.');
+        }
+
         Jira_Issue__c existingIssue = [SELECT Id, Description__c, Issue_Key__c, Issue_Type__c, Last_Updated__c, Project_Key__c, Status__c, Summary__c FROM Jira_Issue__c WHERE Issue_Key__c = :issueKey LIMIT 1];
         Jira_Issue__c updatedIssue = updateIssueRecord(existingIssue, payload);
         update updatedIssue;       
@@ -157,8 +194,19 @@ public without sharing class JiraWebhookProcessor implements IWebhookProcessor {
     private void processIssueDeleted(Map<String, Object> payload) {
         // TODO: Implement issue deletion logic
         Map<String, Object> issueMap = (Map<String, Object>) payload.get('issue');
+
+        // Guard clause to ensure issueMap is not null 
+        if (issueMap == null) {
+            throw new JiraWebhookProcessorException('Error: issue data is missing in the payload.');
+        }
+
         String doomedIssueKey = (String) issueMap.get('key');
-        //TODO: fix line 162
+        
+        // Guard clause to ensure doomedIssueKey is not missing
+        if (String.isEmpty(doomedIssueKey)) {
+            throw new JiraWebhookProcessorException('Error: issue key is missing.');
+        }
+
         Jira_Issue__c doomedIssue = [SELECT Id FROM Jira_Issue__c WHERE Issue_Key__c = :doomedIssueKey];
         try{
             delete doomedIssue;
@@ -175,6 +223,10 @@ public without sharing class JiraWebhookProcessor implements IWebhookProcessor {
      * Implement logic to create a Jira_Project__c record
      */
     private void processProjectCreated(Map<String, Object> payload) {
+        // Guard clause: ensure payload or issue are not empty
+        if( payload == null || payload.get('project') == null){
+            throw new JiraWebhookProcessorException('Error: payload or payload.project is null');
+        }
             //TODO: some of this logic belongs below in createProjectRecord()     
         Jira_Project__c newProject = new Jira_Project__c();    
         //TODO: add null checks
@@ -212,7 +264,18 @@ public without sharing class JiraWebhookProcessor implements IWebhookProcessor {
         //TODO: some of the logic belongs in updateProjectRecord()
         if(payload != null){
             Map<String, Object> projectMap = (Map<String, Object>) payload.get('project');
+
+            //Guard clause: Ensure projectMap is not null
+            if (projectMap == null) {
+                throw new JiraWebhookProcessorException('Error: project data is missing in the payload.');
+            }
+
             String projectKey = (String) projectMap.get('key');
+
+            //Guard clause: Ensure projectKey is not missing
+            if (String.isEmpty(projectKey)) {
+                throw new JiraWebhookProcessorException('Error: project key is missing.');
+            }
             Jira_Project__c existingProject = [SELECT Id, Project_Name__c, Project_Id__c, Project_Key__c, Description__c FROM Jira_Project__c WHERE Project_Key__c = :projectKey LIMIT 1];
             Jira_Project__c updatedProject = new Jira_Project__c();    
 
@@ -235,8 +298,19 @@ public without sharing class JiraWebhookProcessor implements IWebhookProcessor {
      * Implement logic to delete a Jira_Project__c record
      */
     private void processProjectDeleted(Map<String, Object> payload) {
+
+          // Guard clause: ensure payload or issue are not empty
+          if( payload == null || payload.get('project') == null){
+            throw new JiraWebhookProcessorException('Error: payload or payload.project is null');
+        }
         Map<String, Object> projectMap = (Map<String, Object>) payload.get('project');
+        if (projectMap == null) {
+            throw new JiraWebhookProcessorException('Error: project data is missing in the payload.');
+        }
         String projectKey = (String) projectMap.get('key');
+        if (String.isEmpty(projectKey)) {
+            throw new JiraWebhookProcessorException('Error: project key is missing.');
+        }
         Jira_Project__c doomedProject = [SELECT Id FROM Jira_Project__c WHERE Project_Key__c = :projectKey];
         try{
             delete doomedProject;
@@ -259,11 +333,27 @@ public without sharing class JiraWebhookProcessor implements IWebhookProcessor {
      */
     private Jira_Issue__c createIssueRecord(Map<String, Object> issueData) {
 
+        // Guard clause: ensure payload or issue are not empty
+        if( issueData == null || issueData.get('fields') == null){
+            throw new JiraWebhookProcessorException('Error: issueData or issueData.fields is null');
+        }
+
         Map<String,Object> fieldsMap = (Map<String, Object>) issueData.get('fields');
+        if (fieldsMap == null) {
+            throw new JiraWebhookProcessorException('Error: fields data is missing in the issue data.');
+        }
         Map<String,Object> issueTypeMap = (Map<String, Object>) fieldsMap.get('issuetype');
+        if (issueTypeMap == null) {
+            throw new JiraWebhookProcessorException('Error: issue type data is missing.');
+        }
         Map<String,Object> projectMap = (Map<String, Object>) fieldsMap.get('project');
+        if (projectMap == null) {
+            throw new JiraWebhookProcessorException('Error: project data is missing.');
+        }
         Map<String,Object> statusMap = (Map<String, Object>) fieldsMap.get('status');
-        //TODO: There should be null checking in this code
+        if (statusMap == null) {
+            throw new JiraWebhookProcessorException('Error: status data is missing.');
+        }
         Jira_Issue__c newIssueRecord = new Jira_Issue__c();
         newIssueRecord.description__c = (String) fieldsMap.get('description');
         newIssueRecord.Issue_Key__c = (String) issueData.get('key');
@@ -291,10 +381,22 @@ public without sharing class JiraWebhookProcessor implements IWebhookProcessor {
         // TODO: Create a new method to create the issue maps? Because this part is repeating
         Map<String,Object> issueMap = (Map<String, Object>) issueData.get('issue');
         Map<String,Object> fieldsMap = (Map<String, Object>) issueMap.get('fields');
+        if (fieldsMap == null) {
+            throw new JiraWebhookProcessorException('Error: fields data is missing in the issue data.');
+        }
         Map<String,Object> issueTypeMap = (Map<String, Object>) fieldsMap.get('issuetype');
+        if (issueTypeMap == null) {
+            throw new JiraWebhookProcessorException('Error: issue type data is missing.');
+        }
         Map<String,Object> projectMap = (Map<String, Object>) fieldsMap.get('project');
+        if (projectMap == null) {
+            throw new JiraWebhookProcessorException('Error: project data is missing.');
+        }
         Map<String,Object> statusMap = (Map<String, Object>) fieldsMap.get('status');
-        //TODO: There should be null checking in this code
+        if (statusMap == null) {
+            throw new JiraWebhookProcessorException('Error: status data is missing.');
+        }
+        
         Jira_Issue__c updatedIssueRecord = new Jira_Issue__c();
         updatedIssueRecord.Id = existingIssue.Id;
         System.debug(updatedIssueRecord);
@@ -336,4 +438,6 @@ public without sharing class JiraWebhookProcessor implements IWebhookProcessor {
         // TODO: Implement project record update logic
         return existingProject;
     }
+
+    public class JiraWebhookProcessorException extends Exception{}
 } 

@@ -17,6 +17,11 @@ public with sharing class JiraAPIService {
 	 * Reminder: Extract and return the project ID from the response
 	 */
 	public static String createProject(JiraWrapper.ProjectWrapper projectWrapper) {
+		// Guard clause: Validate projectWrapper
+		if (projectWrapper == null || String.isEmpty(projectWrapper.key) || String.isEmpty(projectWrapper.name) || String.isEmpty(projectWrapper.projectTemplateKey)) {
+			throw new IllegalArgumentException('Invalid projectWrapper: key, name, and projectTemplateKey are required.');
+		}
+		
 		Http http = new Http();
 		
 		HttpRequest req = new HttpRequest();
@@ -24,6 +29,7 @@ public with sharing class JiraAPIService {
 		req.setEndpoint(NAMED_CREDENTIAL + CREATE_PROJECT_URL);
 		req.setHeader('Content-Type','application/json');
 		
+		// Build request body
 		Map<String, Object> body = new Map<String, Object>();
 		body.put('key', projectWrapper.key);
 		body.put('name', projectWrapper.name);
@@ -32,15 +38,28 @@ public with sharing class JiraAPIService {
 		req.setBody(JSON.serialize(body));
 
 		HttpResponse res = http.send(req);
-		if(res.getStatusCode() == 201){
-			Map<String, Object> responseBody = (Map<String, Object>) JSON.deserializeUntyped(res.getBody());
-			String projectId = String.valueOf(responseBody.get('id'));
-			return projectId;
-		}else{
-			System.debug('A project was not created');
+
+		// Guard clause: Check for null response or unexpected status code
+    	if (res == null || res.getStatusCode() != 201) {
+        	System.debug('Failed to create project. Status code: ' + (res != null ? String.valueOf(res.getStatusCode()) : 'null'));
+        	return null;
+    	}
+
+		// Guard clause: Check for empty body
+		if (String.isEmpty(res.getBody())) {
+			System.debug('Response body is empty.');
 			return null;
 		}
-		 
+
+		// Parse response body
+		Map<String, Object> responseBody = (Map<String, Object>) JSON.deserializeUntyped(res.getBody());
+		if(responseBody == null || !responseBody.containsKey('id')){
+			System.debug('Invalid response body: ' + res.getBody());
+			return null;
+		}
+		
+		String projectId = String.valueOf(responseBody.get('id'));
+		return projectId; 
 	}
 
 	/**
@@ -50,20 +69,50 @@ public with sharing class JiraAPIService {
 	 * Reminder: Extract and return the issue key from the response
 	 */
 	public static String createIssue(JiraWrapper.IssueWrapper issueWrapper) {
+		if(issueWrapper == null || String.isEmpty(issueWrapper.key) || String.isEmpty(issueWrapper.projectKey) || String.isEmpty(issueWrapper.summary)){
+			throw new IllegalArgumentException('Invalid issueWrapper: key, summary, and projectKey fields are required.');
+		}
+
 		Http http = new http();
 		HttpRequest req = new HttpRequest();
 		req.setMethod('POST');
-		req.setEndpoint(NAMED_CREDENTIAL + CREATE_PROJECT_URL);
+
+		// Guard clause: Ensure that the NAMED_CREDENTIAL constant is correctly configured and not empty
+		if(String.isEmpty(NAMED_CREDENTIAL)){
+			throw new IllegalStateException('Named credential is not configured.');
+		}
+
+		req.setEndpoint(NAMED_CREDENTIAL + CREATE_ISSUE_URL);
 		req.setHeader('Content-Type','application/json');
+
+		// Build request body
 		Map<String, Object> body = issueWrapper.generateIssuePayloadMap();
 		req.setBody(JSON.serialize(body));
-		HttpResponse res = http.send(req);
-		if(res.getStatusCode() == 201){
-			Map<String, Object> responseBody = (Map<String, Object>) JSON.deserializeUntyped(res.getBody());
-			String issueKey = (String) responseBody.get('key');
-			return issueKey;
-		}else{
+
+		HttpResponse res;
+		try {
+			res = http.send(req);
+		} catch (Exception e){
+			System.debug('HTTP callout failed: ' + e.getMessage());
 			return null;
 		}
+
+		// Guard clause: check for null response or unexpected response code
+		if(res == null || res.getStatusCode() != 201){
+			System.debug('Failed to create proejct. Status code: ' + (res != null ? String.valueOf(res.getStatusCode()) : 'null'));
+		}
+
+		// Guard clause: check for empty response body
+		if (String.isEmpty(res.getBody())) {
+			System.debug('Response body is empty.');
+			return null;
+		}
+
+		// Parse response body
+		Map<String, Object> responseBody = (Map<String, Object>) JSON.deserializeUntyped(res.getBody());
+		String issueKey = (String) responseBody.get('key');
+		return issueKey;
 	}
+
+	public class IllegalStateException extends Exception{}
 }

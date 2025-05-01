@@ -251,30 +251,17 @@ public without sharing class JiraWebhookProcessor implements IWebhookProcessor {
      * Implement logic to create a Jira_Project__c record
      */
     private void processProjectCreated(Map<String, Object> payload) {
+        
         // Guard clause: ensure payload or issue are not empty
         if( payload == null || payload.get('project') == null){
             Logger.error('Payload or project is null');
             throw new JiraWebhookProcessorException('Error: payload or payload.project is null');
         }
-            //TODO: some of this logic belongs below in createProjectRecord()     
-        Jira_Project__c newProject = new Jira_Project__c();    
-        
+
         if(payload != null){
-            Map<String, Object> projectMap = (Map<String, Object>) payload.get('project');
-
-            newProject.Project_Name__c = (String) projectMap.get('name');
-
-            newProject.Created_Date__c = Datetime.now();
-
-            newProject.Project_Id__c = (String) projectMap.get('id');
-
-            newProject.Project_Key__c = (String) projectMap.get('key');
-
-            newProject.Description__c = (String) projectMap.get('description');
-
-            insert newProject;
+            Map<String, Object> projectData = (Map<String, Object>) payload.get('project');
+            Jira_Project__c newProject = createProjectRecord(projectData);
             Logger.info('new project successfully created: ' + newProject.Id);
-
         }
 
 
@@ -467,8 +454,22 @@ public without sharing class JiraWebhookProcessor implements IWebhookProcessor {
      * Implement logic to extract project fields and create a record
      */
     private Jira_Project__c createProjectRecord(Map<String, Object> projectData) {
-        // TODO: Implement project record creation logic
-        return new Jira_Project__c();
+        
+            Jira_Project__c newProject = new Jira_Project__c();    
+        
+            newProject.Project_Name__c = (String) projectData.get('name');
+
+            newProject.Created_Date__c = Datetime.now();
+
+            newProject.Project_Id__c = (String) projectData.get('id');
+
+            newProject.Project_Key__c = (String) projectData.get('key');
+
+            newProject.Description__c = (String) projectData.get('description');
+
+            insert newProject;
+            
+        return newProject;
     }
     
     /**

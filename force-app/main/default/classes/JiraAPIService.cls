@@ -19,6 +19,10 @@ public with sharing class JiraAPIService {
 	public static String createProject(JiraWrapper.ProjectWrapper projectWrapper) {
 		// Guard clause: Validate projectWrapper
 		if (projectWrapper == null || String.isEmpty(projectWrapper.key) || String.isEmpty(projectWrapper.name) || String.isEmpty(projectWrapper.projectTemplateKey)) {
+			Logger.error('Invalid projectWrapper: key, name, and projectTemplateKey are required. ' +
+			'Provided values - key: ' + (projectWrapper != null ? projectWrapper.key : 'null') +
+			', name: ' + (projectWrapper != null ? projectWrapper.name : 'null') +
+			', projectTemplateKey: ' + (projectWrapper != null ? projectWrapper.projectTemplateKey : 'null'));
 			throw new IllegalArgumentException('Invalid projectWrapper: key, name, and projectTemplateKey are required.');
 		}
 		
@@ -41,20 +45,20 @@ public with sharing class JiraAPIService {
 
 		// Guard clause: Check for null response or unexpected status code
     	if (res == null || res.getStatusCode() != 201) {
-        	System.debug('Failed to create project. Status code: ' + (res != null ? String.valueOf(res.getStatusCode()) : 'null'));
+        	Logger.error('Failed to create project. Status code: ' + (res != null ? String.valueOf(res.getStatusCode()) : 'null'));
         	return null;
     	}
 
 		// Guard clause: Check for empty body
 		if (String.isEmpty(res.getBody())) {
-			System.debug('Response body is empty.');
+			Logger.error('Response body is empty.');
 			return null;
 		}
 
 		// Parse response body
 		Map<String, Object> responseBody = (Map<String, Object>) JSON.deserializeUntyped(res.getBody());
 		if(responseBody == null || !responseBody.containsKey('id')){
-			System.debug('Invalid response body: ' + res.getBody());
+			Logger.error('Invalid response body: ' + res.getBody());
 			return null;
 		}
 		
@@ -70,6 +74,10 @@ public with sharing class JiraAPIService {
 	 */
 	public static String createIssue(JiraWrapper.IssueWrapper issueWrapper) {
 		if(issueWrapper == null || String.isEmpty(issueWrapper.key) || String.isEmpty(issueWrapper.projectKey) || String.isEmpty(issueWrapper.summary)){
+			Logger.error('Invalid issueWrapper: key, summary, and projectKey fields are required. ' +
+			'Provided values - key: ' + (issueWrapper != null ? issueWrapper.key : 'null') +
+			', projectKey: ' + (issueWrapper != null ? issueWrapper.projectKey : 'null') +
+			', summary: ' + (issueWrapper != null ? issueWrapper.summary : 'null'));
 			throw new IllegalArgumentException('Invalid issueWrapper: key, summary, and projectKey fields are required.');
 		}
 
@@ -79,6 +87,7 @@ public with sharing class JiraAPIService {
 
 		// Guard clause: Ensure that the NAMED_CREDENTIAL constant is correctly configured and not empty
 		if(String.isEmpty(NAMED_CREDENTIAL)){
+			Logger.error('Error: Named credential is not configured.');
 			throw new IllegalStateException('Named credential is not configured.');
 		}
 
@@ -93,18 +102,18 @@ public with sharing class JiraAPIService {
 		try {
 			res = http.send(req);
 		} catch (Exception e){
-			System.debug('HTTP callout failed: ' + e.getMessage());
+			Logger.error('HTTP callout failed: ' + e.getMessage());
 			return null;
 		}
 
 		// Guard clause: check for null response or unexpected response code
 		if(res == null || res.getStatusCode() != 201){
-			System.debug('Failed to create proejct. Status code: ' + (res != null ? String.valueOf(res.getStatusCode()) : 'null'));
+			Logger.error('Failed to create proejct. Status code: ' + (res != null ? String.valueOf(res.getStatusCode()) : 'null'));
 		}
 
 		// Guard clause: check for empty response body
 		if (String.isEmpty(res.getBody())) {
-			System.debug('Response body is empty.');
+			Logger.error('Response body is empty.');
 			return null;
 		}
 

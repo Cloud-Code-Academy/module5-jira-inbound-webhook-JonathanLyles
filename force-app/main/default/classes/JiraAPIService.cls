@@ -58,23 +58,18 @@ public with sharing class JiraAPIService {
 	 * Reminder: Extract and return the issue key from the response
 	 */
 	public static String createIssue(JiraWrapper.IssueWrapper issueWrapper) {
-		if(issueWrapper == null || String.isEmpty(issueWrapper.key) || String.isEmpty(issueWrapper.projectKey) || String.isEmpty(issueWrapper.summary)){
-			Logger.error('Invalid issueWrapper: key, summary, and projectKey fields are required. ' +
-			'Provided values - key: ' + (issueWrapper != null ? issueWrapper.key : 'null') +
-			', projectKey: ' + (issueWrapper != null ? issueWrapper.projectKey : 'null') +
-			', summary: ' + (issueWrapper != null ? issueWrapper.summary : 'null'));
-			throw new IllegalArgumentException('Invalid issueWrapper: key, summary, and projectKey fields are required.');
+
+		try{
+			if(issueWrapper == null){
+				throw new NullPointerException('IssueWrapper is null');
+			}
+		}catch(NullPointerException e){
+			Logger.error(e.getMessage());
 		}
 
 		Http http = new http();
 		HttpRequest req = new HttpRequest();
 		req.setMethod('POST');
-
-		// Guard clause: Ensure that the NAMED_CREDENTIAL constant is correctly configured and not empty
-		if(String.isEmpty(NAMED_CREDENTIAL)){
-			Logger.error('Error: Named credential is not configured.');
-			throw new IllegalStateException('Named credential is not configured.');
-		}
 
 		req.setEndpoint(NAMED_CREDENTIAL + CREATE_ISSUE_URL);
 		req.setHeader('Content-Type','application/json');

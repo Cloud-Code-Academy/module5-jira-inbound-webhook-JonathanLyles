@@ -27,9 +27,9 @@ private class JiraAPIServiceTest {
         Test.startTest();
         Try{    
             projectId = JiraAPIService.createProject(projectWrapper);
-            System.assert(false, 'Expected an exception.');
+            System.assert(false, 'Expected a null pointer exception: projectWrapper is null.');
         }catch(NullPointerException e){
-            System.assert(true, 'NullPointerException was correctly thrown');
+            System.assert(true, 'NullPointerException was correctly thrown for a null projectWrapper.');
         }
         Test.stopTest();
 
@@ -60,5 +60,23 @@ private class JiraAPIServiceTest {
     @IsTest
     static void createIssueSuccessTest(){
         
+    }
+    @IsTest
+    static void createIssueNullIssueWrapper(){
+        String issueKey;
+
+        JiraWrapper.IssueWrapper issueWrapper = null;
+
+        Test.startTest();
+        Try{
+            issueKey = JiraAPIService.createIssue(issueWrapper);
+            System.assert(false,'Expected a null pointer exception: issueWrapper is null');
+        }catch(NullPointerException e){
+            System.assert(true, 'NullPointerException was correctly thrown for a null issueWrapper.');
+        }
+        Test.stopTest();
+
+        Assert.areEqual(null, issueKey, 'Expected issueKey to be null when issueWrapper is null');
+
     }
 }

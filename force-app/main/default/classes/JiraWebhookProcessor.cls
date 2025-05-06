@@ -60,6 +60,12 @@ public without sharing class JiraWebhookProcessor implements IWebhookProcessor {
                 return false;
             }
 
+            // Guard clause: Ensure id is not null
+            if(!payload.containsKey('id')){
+                Logger.error('id is null');
+                return false;
+            }
+
             return true;      
 
         } catch (Exception e) {

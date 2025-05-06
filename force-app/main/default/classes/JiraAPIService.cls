@@ -12,18 +12,15 @@ public with sharing class JiraAPIService {
 	 * Creates a project in Jira
 	 * @param projectWrapper The project wrapper object containing all necessary data
 	 * @return String The Jira project ID
-	 *
-	 * TODO: Implement this method to make a callout to Jira API to create a project
-	 * Reminder: Extract and return the project ID from the response
 	 */
 	public static String createProject(JiraWrapper.ProjectWrapper projectWrapper) {
 		// Guard clause: Validate projectWrapper
-		if (projectWrapper == null || String.isEmpty(projectWrapper.key) || String.isEmpty(projectWrapper.name) || String.isEmpty(projectWrapper.projectTemplateKey)) {
-			Logger.error('Invalid projectWrapper: key, name, and projectTemplateKey are required. ' +
-			'Provided values - key: ' + (projectWrapper != null ? projectWrapper.key : 'null') +
-			', name: ' + (projectWrapper != null ? projectWrapper.name : 'null') +
-			', projectTemplateKey: ' + (projectWrapper != null ? projectWrapper.projectTemplateKey : 'null'));
-			throw new IllegalArgumentException('Invalid projectWrapper: key, name, and projectTemplateKey are required.');
+		try{
+			if (projectWrapper == null){
+				throw new NullPointerException('projectWrapper is null');
+			}
+		}catch(NullPointerException e){
+			Logger.error(e.getMessage());
 		}
 		
 		Http http = new Http();
@@ -44,25 +41,13 @@ public with sharing class JiraAPIService {
 		HttpResponse res = http.send(req);
 
 		// Guard clause: Check for null response or unexpected status code
-    	if (res == null || res.getStatusCode() != 201) {
-        	Logger.error('Failed to create project. Status code: ' + (res != null ? String.valueOf(res.getStatusCode()) : 'null'));
-        	return null;
-    	}
-
-		// Guard clause: Check for empty body
-		if (String.isEmpty(res.getBody())) {
-			Logger.error('Response body is empty.');
+		if (res == null || res.getStatusCode() != 201) {
+			Logger.error('Failed to create project. Status code: ' + (res != null ? String.valueOf(res.getStatusCode()) : 'null'));
 			return null;
 		}
 
-		// Parse response body
-		Map<String, Object> responseBody = (Map<String, Object>) JSON.deserializeUntyped(res.getBody());
-		if(responseBody == null || !responseBody.containsKey('id')){
-			Logger.error('Invalid response body: ' + res.getBody());
-			return null;
-		}
-		
-		String projectId = String.valueOf(responseBody.get('id'));
+		Map<String, Object> responseMap = (Map<String, Object>) JSON.deserializeUntyped(res.getBody());
+		String projectId = String.valueOf( responseMap.get('id') );
 		return projectId; 
 	}
 
@@ -124,4 +109,5 @@ public with sharing class JiraAPIService {
 	}
 
 	public class IllegalStateException extends Exception{}
+	public class NullPointerException extends Exception{}
 }

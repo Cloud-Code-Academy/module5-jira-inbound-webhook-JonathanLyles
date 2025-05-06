@@ -46,7 +46,7 @@ global without sharing class WebhookResource {
             return new ResponseWrapper('error', 'No request URI found');
         }   
 
-        try {
+        
         // Extract the webhook type from the URL path using getWebhookTypeFromPath
             webhookType = getWebhookTypeFromPath(req.requestURI);
             Logger.info('Extracted webhook type: ' + webhookType);
@@ -60,24 +60,18 @@ global without sharing class WebhookResource {
                 Logger.error('Unsupported webhook type');
                 return new ResponseWrapper('error', 'Unsupported webhook type');
             }
-        } 
-        catch (Exception e) {
-            Logger.error('Error processing webhook type: ' + e.getMessage());
-            return new ResponseWrapper('error', 'Error processing webhook: ' + e.getMessage());
-        }
+     
+        
         
         // Check if the payload is valid
 
-        try{
+      
             JiraWebhookProcessor jwp = new JiraWebhookProcessor();
             if( jwp.validate(req) == false){
                 Logger.error('Invalid JSON payload in the request');
                 return new ResponseWrapper('error', 'Invalid JSON payload');
             }
-        }catch(Exception e){
-            Logger.error(e.getMessage());
-            return new ResponseWrapper('error', 'Invalid JSON payload');
-        }
+        
 
 
         WebhookFactory.processWebhook(webhookType, req);
@@ -103,7 +97,7 @@ global without sharing class WebhookResource {
             // If there are additional slashes, only take the first segment
             Integer nextSlash = remaining.indexOf('/');
             if (nextSlash > 0) {
-                System.debug('nextSlash: ' + nextSlash);
+                System.debug(remaining.substring(0, nextSlash).toLowerCase());
                 return remaining.substring(0, nextSlash).toLowerCase();
             }
             

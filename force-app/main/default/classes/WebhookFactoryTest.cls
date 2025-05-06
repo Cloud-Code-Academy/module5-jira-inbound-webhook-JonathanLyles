@@ -32,7 +32,7 @@ private class WebhookFactoryTest {
         try{
             WebhookFactory.processWebhook(webhookType, request);
             // If no exception is thrown, pass the test
-            System.assert(true, 'Expected WebhookException was not thrown');
+            System.assert(true, 'Test passed');
         }catch(WebhookFactory.WebhookException e){
             // If an exception is thrown, fail the test
             System.assert(false,'Test failed. Message: ' + e.getMessage());

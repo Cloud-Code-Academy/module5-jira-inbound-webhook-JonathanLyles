@@ -52,17 +52,12 @@ public without sharing class JiraWebhookProcessor implements IWebhookProcessor {
         
         try {
             String requestBody = request.requestBody.toString();
+            System.debug('request body: ' + requestBody);
             Map<String, Object> payload = (Map<String, Object>) JSON.deserializeUntyped(requestBody);
-            
+            System.debug('webhook body: ' + payload);
             // Guard clause: Ensure webhookEvent is not null
             if (!payload.containsKey('webhookEvent')) {
                 Logger.error('webhookEvent is null');
-                return false;
-            }
-
-            // Guard clause: Ensure id is not null
-            if(!payload.containsKey('id')){
-                Logger.error('id is null');
                 return false;
             }
 

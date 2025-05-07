@@ -83,20 +83,21 @@ public with sharing class JiraAPIService {
 			res = http.send(req);
 		} catch (Exception e){
 			Logger.error('HTTP callout failed: ' + e.getMessage());
-			return null;
+			//Rethrow for the test to catch it
+			throw e;
 		}
 
 		// Guard clause: check for null response or unexpected response code
-		if(res == null || res.getStatusCode() != 201){
-			Logger.error('Failed to create proejct. Status code: ' + (res != null ? String.valueOf(res.getStatusCode()) : 'null'));
+		try{
+			if(res == null || res.getStatusCode() != 201){
+				throw new JiraAPIException('Callout failed. Status code: ' + res.getStatusCode());
+			}
+		}catch(JiraAPIException e){
+			Logger.error('Failed to create issue. Status code: ' + (res != null ? String.valueOf(res.getStatusCode()) : 'null'));
+			System.debug('More Proof');
+			throw e; // Re-thrown for the JiraAPIServiceTest.createIssueIsFailure() try/catch block
 		}
-
-		// Guard clause: check for empty response body
-		if (String.isEmpty(res.getBody())) {
-			Logger.error('Response body is empty.');
-			return null;
-		}
-
+		 
 		// Parse response body
 		Map<String, Object> responseBody = (Map<String, Object>) JSON.deserializeUntyped(res.getBody());
 		String issueKey = (String) responseBody.get('key');
@@ -105,4 +106,5 @@ public with sharing class JiraAPIService {
 
 	public class IllegalStateException extends Exception{}
 	public class NullPointerException extends Exception{}
+	public class JiraAPIException extends Exception{}
 }

@@ -52,9 +52,8 @@ public without sharing class JiraWebhookProcessor implements IWebhookProcessor {
         
         try {
             String requestBody = request.requestBody.toString();
-            System.debug('request body: ' + requestBody);
+            
             Map<String, Object> payload = (Map<String, Object>) JSON.deserializeUntyped(requestBody);
-            System.debug('webhook body: ' + payload);
             // Guard clause: Ensure webhookEvent is not null
             if (!payload.containsKey('webhookEvent')) {
                 Logger.error('webhookEvent is null');
@@ -139,13 +138,13 @@ public without sharing class JiraWebhookProcessor implements IWebhookProcessor {
     private void processIssueCreated(Map<String, Object> payload) {
 
         // Guard clause: ensure payload or issue are not empty
-        if( payload == null || payload.get('issue') == null){
-            Logger.error(
-                'Payload or issue is null' +
-                'Payload contents: ' + payload +
-                'Issue contents: ' + payload.get('issue')
-                );
-            throw new JiraWebhookProcessorException('Error: payload or payload.issue is null');
+        try{
+            if( payload == null || payload.get('issue') == null){
+                Logger.error('NullPointerException should be thrown');
+                throw new JiraWebhookProcessorException('Error: payload or payload.issue is null');
+            }
+        }catch(JiraWebhookProcessorException e) {
+            Logger.error(e.getMessage());
         }
         try {
             // 1. Extract issue data from the payload

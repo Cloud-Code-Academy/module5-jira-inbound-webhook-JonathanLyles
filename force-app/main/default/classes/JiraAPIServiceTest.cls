@@ -59,8 +59,17 @@ private class JiraAPIServiceTest {
 
     @IsTest
     static void createIssueSuccessTest(){
-        
+
+        JiraWrapper.IssueWrapper issueWrapper = new JiraWrapper.IssueWrapper('TST','Test summary','Test description','Bug');
+        Test.setMock(HttpCalloutMock.class, new JiraMockHttpResponseGenerator(true, false, 'TST'));
+        Test.startTest();
+        String issueKey = JiraAPIService.createIssue(issueWrapper);
+        Test.stopTest();
+
+        Assert.areEqual('ED-24', issueKey, 'Error: Expected issueKey: ED-24. Actual: ' + issueKey);
+    
     }
+    
     @IsTest
     static void createIssueNullIssueWrapper(){
         String issueKey;
@@ -77,6 +86,40 @@ private class JiraAPIServiceTest {
         Test.stopTest();
 
         Assert.areEqual(null, issueKey, 'Expected issueKey to be null when issueWrapper is null');
+    }
 
+    @IsTest
+    static void createIssueIsFailure(){
+        String issueKey;
+        JiraWrapper.IssueWrapper issueWrapper = new JiraWrapper.IssueWrapper('TST','Test summary','Test description','Bug');
+        Test.setMock(HttpCalloutMock.class, new JiraMockHttpResponseGenerator(false, false, 'TST'));
+        Test.startTest();
+        try{
+            issueKey = JiraAPIService.createIssue(issueWrapper);
+            System.assert(false, 'Fail: Exception should have been thrown.');
+        } catch(Exception e){
+            System.assert(true, 'Pass: Exception thrown as expected.');
+        }
+
+            
+      
+        Test.stopTest();
+
+        Assert.areEqual(null, issueKey, 'Error: issueKey should be null when callout has an exception. Actual value: ' + issueKey);
+    }
+
+    @Istest
+    static void createIssueException(){
+        String issueKey;
+        JiraWrapper.IssueWrapper issueWrapper = new JiraWrapper.IssueWrapper('TST','Test summary','Test description','Bug');
+        Test.setMock(HttpCalloutMock.class, new JiraMockHttpExceptionSimulation());
+        Test.startTest();
+        try{
+            issueKey = JiraAPIService.createIssue(issueWrapper);
+            System.assert(false, 'Fail: Expected an exception to be thrown.');
+        }catch(Exception e){
+            System.assert(true, 'Pass: Exception thrown as expected.');
+        }
+        Test.stopTest();
     }
 }

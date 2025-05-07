@@ -28,8 +28,6 @@ public with sharing class JiraMockHttpResponseGeneratorJL implements HttpCallout
 		this.isBodyNull = isBodyNull;
 	}
 
-
-
     /**
 	 * Get the standard mock project ID
 	 */

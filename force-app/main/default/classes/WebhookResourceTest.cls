@@ -1,6 +1,6 @@
 /**
  * @description Test class for WebhookResource
- * @author Your Name
+ * @author Jonathan Lyles
  */
 @IsTest
 private class WebhookResourceTest {
@@ -252,7 +252,19 @@ private class WebhookResourceTest {
         RestRequest req = new RestRequest();
         req.requestURI = '/webhook/invalid';
         req.httpMethod = 'POST';
-        req.requestBody = Blob.valueOf('{"test": "data"}');
+        // Create a sample Jira project created payload
+        String requestBody = '{' +
+            '"webhookEvent": "project_created",' +
+            '"project": {' +
+                '"key": "TEST",' +
+                '"id": "10000",' +
+                '"name": "Test Project",' +
+                '"description": "This is a test project"' +
+            '}' +
+        '}';
+        
+        req.requestBody = Blob.valueOf(requestBody);
+        
         
         // Set the request and response
         RestContext.request = req;
@@ -265,7 +277,7 @@ private class WebhookResourceTest {
         
         // Assert the response
         Assert.areEqual('error', response.status, 'Response status should be error');
-        Assert.isTrue(response.message.contains('Unsupported webhook type'), 'Error message should indicate unsupported webhook type');
+        Assert.areEqual('Unsupported webhook type', response.message, 'Error message should indicate unsupported webhook type');
     }
     
     /**
@@ -290,5 +302,202 @@ private class WebhookResourceTest {
         
         // Assert the response
         Assert.areEqual('error', response.status, 'Response status should be error');
+    }
+
+    //Extra tests by Jonathan Lyles
+    @IsTest
+    static void testNullRestRequest(){
+
+        RestRequest request;
+
+        RestContext.request = request;
+        RestContext.response = new RestResponse();
+
+        Test.startTest();
+        WebhookResource.ResponseWrapper response = WebhookResource.doPost();
+        Test.stopTest();
+
+        Assert.areEqual('error', response.status, 'Response status should be error');
+        Assert.areEqual('No request found', response.message, 'Expected message: No request found. Actual message: ' + response.message);
+    }   
+    @IsTest
+    static void testNullRestRequestBody(){
+
+        RestRequest req = new RestRequest();
+        req.requestURI = '/webhook/jira';
+        req.httpMethod = 'POST';
+        
+        RestContext.request = req;
+        RestContext.response = new RestResponse();
+
+        Test.startTest();
+        WebhookResource.ResponseWrapper response = WebhookResource.doPost();
+        Test.stopTest();
+
+        Assert.areEqual('error', response.status, 'Response status should be error');
+        Assert.areEqual('No request body found', response.message, 'Expected message: No request body found. Actual message: ' + response.message);
+    }
+
+    @IsTest
+    static void testNullRequestURI(){
+        RestRequest req = new RestRequest();
+        req.requestURI = null;
+        req.httpMethod = 'POST';
+        // Create a sample Jira project created payload
+        String requestBody = '{' +
+            '"webhookEvent": "project_created",' +
+            '"project": {' +
+                '"key": "TEST",' +
+                '"id": "10000",' +
+                '"name": "Test Project",' +
+                '"description": "This is a test project"' +
+            '}' +
+        '}';
+        
+        req.requestBody = Blob.valueOf(requestBody);
+        
+        RestContext.request = req;
+        RestContext.response = new RestResponse();
+
+        Test.startTest();
+        WebhookResource.ResponseWrapper response = WebhookResource.doPost();
+        Test.stopTest();
+
+        Assert.areEqual('error', response.status, 'Response status should be error');
+        Assert.areEqual('No request URI found', response.message, 'Expected message: No request URI found. Actual message: ' + response.message);
+    }
+
+    @IsTest
+    static void testWebhookTypeNotFound(){
+        RestRequest req = new RestRequest();
+        req.requestURI = '/webhook';
+        req.httpMethod = 'POST';
+        // Create a sample Jira project created payload
+        String requestBody = '{' +
+            '"webhookEvent": "project_created",' +
+            '"project": {' +
+                '"key": "TEST",' +
+                '"id": "10000",' +
+                '"name": "Test Project",' +
+                '"description": "This is a test project"' +
+            '}' +
+        '}';
+        
+        req.requestBody = Blob.valueOf(requestBody);
+        
+        RestContext.request = req;
+        RestContext.response = new RestResponse();
+
+        Test.startTest();
+        WebhookResource.ResponseWrapper response = WebhookResource.doPost();
+        Test.stopTest();
+
+        Assert.areEqual('error', response.status, 'Response status should be error');
+        Assert.areEqual('No webhook type found', response.message, 'Expected message: No webhook type found. Actual message: ' + response.message);
+    }
+
+    @IsTest
+    static void testPathWithExtraSegments(){
+        RestRequest req = new RestRequest();
+        req.requestURI = '/webhook/jira/extrastuff';
+        req.httpMethod = 'POST';
+        // Create a sample Jira project created payload
+        String requestBody = '{' +
+            '"webhookEvent": "project_created",' +
+            '"project": {' +
+                '"key": "TEST",' +
+                '"id": "10000",' +
+                '"name": "Test Project",' +
+                '"description": "This is a test project"' +
+            '}' +
+        '}';
+        
+        req.requestBody = Blob.valueOf(requestBody);
+        
+        RestContext.request = req;
+        RestContext.response = new RestResponse();
+
+        Test.startTest();
+        WebhookResource.ResponseWrapper response = WebhookResource.doPost();
+        Test.stopTest();
+
+        Assert.areNotEqual('error', response.status, 'Response status should not be error.');
+        Assert.areNotEqual('Unsupported webhook type', response.message, 'Response message should not be an error message. Message received: ' + response.message);
+    }
+
+    @IsTest
+    static void testValidWebhookType() {
+        // Create test request
+        RestRequest req = new RestRequest();
+        req.requestURI = '/webhook/jira';
+        req.httpMethod = 'POST';
+        // Create a sample Jira project created payload
+        String requestBody = '{' +
+            '"webhookEvent": "project_created",' +
+            '"project": {' +
+                '"key": "TEST",' +
+                '"id": "10000",' +
+                '"name": "Test Project",' +
+                '"description": "This is a test project"' +
+            '}' +
+        '}';
+        
+        req.requestBody = Blob.valueOf(requestBody);
+        
+        // Set the request and response
+        RestContext.request = req;
+        RestContext.response = new RestResponse();
+        
+        // Call the REST resource
+        Test.startTest();
+        WebhookResource.ResponseWrapper response = WebhookResource.doPost();
+        Test.stopTest();
+        
+        // Assert the response
+        Assert.areEqual('success', response.status, 'Response status should be success');
+    }   
+
+    //Helper methods for common logic
+
+    private static RestRequest createRestRequest(String requestURI, String requestBody) {
+        RestRequest req = new RestRequest();
+        req.requestURI = requestURI;
+        req.httpMethod = 'POST';
+        req.requestBody = Blob.valueOf(requestBody);
+        return req;
+    }
+
+    private static String getProjectCreatedRequestBody() {
+        return '{' +
+            '"webhookEvent": "project_created",' +
+            '"project": {' +
+                '"key": "TEST",' +
+                '"id": "10000",' +
+                '"name": "Test Project",' +
+                '"description": "This is a test project"' +
+            '}' +
+        '}';
+    }
+
+    private static String getIssueCreatedRequestBody() {
+        return '{' +
+            '"webhookEvent": "jira:issue_created",' +
+            '"issue": {' +
+                '"key": "TEST-123",' +
+                '"fields": {' +
+                    '"summary": "Test issue",' +
+                    '"description": "This is a test issue",' +
+                    '"issuetype": {' +
+                        '"name": "Bug"' +
+                    '},' +
+                    '"status": {' +
+                        '"name": "Open"' +
+                    '},' +
+                    '"project": {' +
+                        '"key": "TEST"' +
+                    '}' +
+                '}' +
+            '}' +
+        '}';
     }
 } 
